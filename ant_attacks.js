@@ -1,16 +1,20 @@
 // Advanced Ant Colony & Ant Attacks Mod for Sandboxels
 // Made by Raiden Corporation
 
-// 1. Setup Standard Ant Reactions & remove solo egg-laying
+// 1. Setup Standard Ant Reactions
 if (elements.ant) {
     elements.ant.reactions = elements.ant.reactions || {};
     
-    // Stop standard ants from laying eggs on their own
+    // Stop standard ants from laying eggs on their own (Only Queen lays eggs!)
     delete elements.ant.reactions["food"];
     delete elements.ant.reactions["sugar"];
-    delete elements.ant.reactions["juice"];
     
-    // Ants turn termites into dead_bugs
+    // Allow ants to drink liquids like normal ants! 🍹
+    elements.ant.reactions["juice"] = { "elem1": "carrying_ant", "elem2": null };
+    elements.ant.reactions["water"] = { "elem1": "carrying_ant", "elem2": null };
+    elements.ant.reactions["sugar_water"] = { "elem1": "carrying_ant", "elem2": null };
+
+    // Ants turn termites into dead_bugs to hunt/harvest
     elements.ant.reactions["termite"] = { "elem1": "ant", "elem2": "dead_bug" };
 }
 
@@ -31,7 +35,7 @@ elements.food_bite = {
     }
 };
 
-// 3. Carrying Ant Element
+// 3. Carrying Ant Element (Hauls liquid & food down into dirt)
 elements.carrying_ant = {
     color: "#804000",
     behavior: [
@@ -44,7 +48,7 @@ elements.carrying_ant = {
     state: "solid",
     density: 1500,
     reactions: {
-        "dirt": { "elem1": "ant", "elem2": "food_bite" }
+        "dirt": { "elem1": "ant", "elem2": "food_bite" } // Drops off food bite inside colony!
     }
 };
 
@@ -61,6 +65,7 @@ elements.queen_ant = {
     density: 1800,
     reactions: {
         "food_bite": { "elem1": "queen_ant", "elem2": null },
+        "juice": { "elem1": "queen_ant", "elem2": null },
         "sugar": { "elem1": "queen_ant", "elem2": null }
     }
 };
