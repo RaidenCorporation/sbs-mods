@@ -5,21 +5,22 @@
 if (elements.ant) {
     elements.ant.reactions = elements.ant.reactions || {};
     
-    // Stop standard ants from laying eggs on their own (Only Queen lays eggs!)
-    delete elements.ant.reactions["food"];
-    delete elements.ant.reactions["sugar"];
-    
-    // Allow ants to drink liquids like normal ants! 🍹
+    // Normal worker ants can eat food & sugar directly! 🍔
+    elements.ant.reactions["food"] = { "elem1": "ant", "elem2": null };
+    elements.ant.reactions["sugar"] = { "elem1": "ant", "elem2": null };
+
+    // Ants drink liquids & carry them to the colony 🍹
     elements.ant.reactions["juice"] = { "elem1": "carrying_ant", "elem2": null };
     elements.ant.reactions["water"] = { "elem1": "carrying_ant", "elem2": null };
     elements.ant.reactions["sugar_water"] = { "elem1": "carrying_ant", "elem2": null };
 
-    // Ants turn termites into dead_bugs to hunt/harvest
+    // Ants hunt termites
     elements.ant.reactions["termite"] = { "elem1": "ant", "elem2": "dead_bug" };
 }
 
-// 2. Food Bite Element (Safe Powder Behavior)
+// 2. Food Bite Element
 elements.food_bite = {
+    name: "Food Bite",
     color: "#a0e060",
     behavior: [
         "XX|XX|XX",
@@ -31,12 +32,13 @@ elements.food_bite = {
     state: "solid",
     density: 1200,
     reactions: {
-        "ant": { "elem1": null, "elem2": "ant" }
+        "ant": { "elem1": null, "elem2": "ant" } // Worker ants can snack on bites inside too!
     }
 };
 
-// 3. Carrying Ant Element (Hauls liquid & food down into dirt)
+// 3. Carrying Ant Element
 elements.carrying_ant = {
+    name: "Carrying Ant",
     color: "#804000",
     behavior: [
         "XX|XX|XX",
@@ -48,12 +50,14 @@ elements.carrying_ant = {
     state: "solid",
     density: 1500,
     reactions: {
-        "dirt": { "elem1": "ant", "elem2": "food_bite" } // Drops off food bite inside colony!
+        "dirt": { "elem1": "ant", "elem2": "food_bite" }
     }
 };
 
 // 4. Queen Ant Element 👑
 elements.queen_ant = {
+    name: "Queen Ant",
+    alias: ["queen", "queen ant", "queen_ant"],
     color: ["#4a1f00", "#301400"],
     behavior: [
         "XX|CR:egg%1|XX", // 1% chance to lay an egg when fed
@@ -64,6 +68,7 @@ elements.queen_ant = {
     state: "solid",
     density: 1800,
     reactions: {
+        "food": { "elem1": "queen_ant", "elem2": null },
         "food_bite": { "elem1": "queen_ant", "elem2": null },
         "juice": { "elem1": "queen_ant", "elem2": null },
         "sugar": { "elem1": "queen_ant", "elem2": null }
