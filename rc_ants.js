@@ -10,41 +10,43 @@ function initMyAntMod() {
     if (elements.ant) {
         elements.ant.reactions = elements.ant.reactions || {};
         
-        // Ants eat normal food, sugar, and hunt termites
+        // Setup base reactions
         elements.ant.reactions["food"] = { "elem1": "ant", "elem2": null };
         elements.ant.reactions["sugar"] = { "elem1": "ant", "elem2": null };
         elements.ant.reactions["termite"] = { "elem1": "ant", "elem2": "dead_bug" };
 
-        // Ants drink liquids and store the item inside a pixel property instead of transforming
-        elements.ant.reactions["juice"] = {
-            func: (pixel1, pixel2) => {
-                pixel1.carryingFood = true;
-                pixel1.color = "#804000"; // Changes colour to look like it is carrying something
-            },
-            elem2: null
-        };
-        elements.ant.reactions["water"] = {
-            func: (pixel1, pixel2) => {
-                pixel1.carryingFood = true;
-                pixel1.color = "#804000";
-            },
-            elem2: null
-        };
-        elements.ant.reactions["sugar_water"] = {
-            func: (pixel1, pixel2) => {
-                pixel1.carryingFood = true;
-                pixel1.color = "#804000";
-            },
-            elem2: null
-        };
+        // Save original ant tick behavior
+        var oldAntTick = elements.ant.tick;
 
-        // When a hilled or digging ant hits dirt, it drops off the food bite if it is carrying one
-        elements.ant.reactions["dirt"] = {
-            func: (pixel1, pixel2) => {
-                if (pixel1.carryingFood) {
-                    delete pixel1.carryingFood;
-                    delete pixel1.color; // Reverts back to vanilla ant colour automatically
-                    pixel2.element = "food_bite"; // Directly converts dirt pixel to a food bite
+        // Custom tick loop to handle carrying behavior seamlessly
+        elements.ant.tick = function(pixel) {
+            // Run original tick physics (movement, falling, etc.)
+            if (oldAntTick) oldAntTick(pixel);
+
+            // Check surrounding pixels for liquids
+            var neighbors = [
+                pixelMap[pixel.x-1]?.[pixel.y],
+                pixelMap[pixel.x+1]?.[pixel.y],
+                pixelMap[pixel.x]?.[pixel.y-1],
+                pixelMap[pixel.x]?.[pixel.y+1]
+            ];
+
+            for (var i = 0; i < neighbors.length; i++) {
+                var target = neighbors[i];
+                if (!target) continue;
+
+                // Pick up liquids
+                if ((target.element === "juice" || target.element === "water" || target.element === "sugar_water") && !pixel.carryingFood) {
+                    deletePixel(target.x, target.y); // Consume the liquid pixel
+                    pixel.carryingFood = true;
+                    pixel.color = "#804000"; // Visual indicator for carrying food
+                }
+
+                // Unload food bite into dirt
+                if (target.element === "dirt" && pixel.carryingFood) {
+                    pixel.carryingFood = false;
+                    delete pixel.color; // Revert to standard ant color
+                    changePixel(target, "food_bite"); // Transform dirt into food bite
                 }
             }
         };
